@@ -15,33 +15,14 @@ namespace CactbotExtension.Events
     internal class Events
     {
         private EventSource ce;
-        private IActPluginV1 ffxivPlugin;
+        private FFXIV_ACT_Plugin.FFXIV_ACT_Plugin ffxivPlugin;
 
         //private BackgroundWorker tester;
         public Events(EventSource cactbotExtensionEventSource)
         {
             this.ce = cactbotExtensionEventSource;
-            Attach();
-            //tester = new BackgroundWorker { WorkerSupportsCancellation = true };
-            //tester.DoWork += fakeMessage;
-            //tester.RunWorkerAsync();
-            
+            Attach();         
         }
-
-        //private void fakeMessage(object sender, DoWorkEventArgs e)
-        //{
-        //    while (true) {
-        //        if (tester.CancellationPending) {
-        //            e.Cancel = true;
-        //            break;
-        //        }
-
-        //        ce.DispatchToJS(new MapEffectEvent(114514, 1, 2, 3, 4));
-        //        //ce.LogInfo("test");
-        //        Thread.Sleep(3000);
-        //    }
-        //}
-
         public void Attach()
         {
             lock (this) {
@@ -51,25 +32,37 @@ namespace CactbotExtension.Events
                 }
 
                 if (this.ffxivPlugin == null) {
-                    //this.ffxivPlugin =
-                    //     ActGlobals.oFormActMain.ActPlugins
-                    //     .Where(x =>
-                    //     x.pluginFile.Name.ToUpper().Contains("FFXIV_ACT_Plugin".ToUpper()) &&
-                    //     x.lblPluginStatus.Text.ToUpper().Contains("FFXIV_ACT_Plugin Started.".ToUpper()))
-                    //     .Select(x => x.pluginObj)
-                    //     .FirstOrDefault();
-                    this.ffxivPlugin= ActGlobals.oFormActMain.ActPlugins.FirstOrDefault(x => x.pluginObj?.GetType().ToString() == "FFXIV_ACT_Plugin.FFXIV_ACT_Plugin")?.pluginObj;
+                    this.ffxivPlugin= (FFXIV_ACT_Plugin.FFXIV_ACT_Plugin)(ActGlobals.oFormActMain.ActPlugins.FirstOrDefault(x => x.pluginObj?.GetType().ToString() == "FFXIV_ACT_Plugin.FFXIV_ACT_Plugin")?.pluginObj);
                 }
-
                 if (this.ffxivPlugin != null) {
-                    ((FFXIV_ACT_Plugin.FFXIV_ACT_Plugin)this.ffxivPlugin).DataSubscription.NetworkReceived -= ffxivPluginNetworkReceivedDelegate;
-                    ((FFXIV_ACT_Plugin.FFXIV_ACT_Plugin)this.ffxivPlugin).DataSubscription.NetworkReceived += ffxivPluginNetworkReceivedDelegate;
-                    ce.LogInfo("CactbotExtension: Handled: DataSubscription");
+                    var task = new Task(() => {
+                        var gameProcess = this.ffxivPlugin.DataRepository.GetCurrentFFXIVProcess();
+                        while (gameProcess == null) {
+                            gameProcess = this.ffxivPlugin.DataRepository.GetCurrentFFXIVProcess();
+                            ce.LogInfo("Waiting Process...");
+                            Thread.Sleep(1000);
+                        }
+                        var gameVersion = Utils.GetGameVersion(gameProcess);
+                        var gameRegion = Utils.GetLocaleString(this.ffxivPlugin);
+                        OpcodeManager.Instance.LogInfo += ce.LogInfo;
+                        OpcodeManager.Instance.LogError += ce.LogError;
+                        OpcodeManager.Instance.LogDebug += ce.LogDebug;
+                        OpcodeManager.Instance.Init(gameVersion,gameRegion);
+                        OpcodeManager.Instance.EnsureOpcode();
+
+                        this.MapEffect = (ushort)OpcodeManager.Instance.GetOpcode("MapEffect");
+                        ce.LogInfo($"Opcode:MapEffect={this.MapEffect:X4}");
+
+                        this.ffxivPlugin.DataSubscription.NetworkReceived -= ffxivPluginNetworkReceivedDelegate;
+                        this.ffxivPlugin.DataSubscription.NetworkReceived += ffxivPluginNetworkReceivedDelegate;
+                        ce.LogInfo("Net Data Subscription Added.");
+                    });
+                    task.Start();
                 }
             }
         }
 
-
+        private ushort MapEffect=0xFFFF;
         private unsafe void ffxivPluginNetworkReceivedDelegate(string connection, long epoch, byte[] message)
         {
             if (message.Length < sizeof(ServerMessageHeader)) {
@@ -79,7 +72,7 @@ namespace CactbotExtension.Events
                 fixed (byte* ptr = message) {
                     var header = (ServerMessageHeader*)ptr;
                     var dataPtr = ptr + 0x20;
-                    if (header->MessageType == 0x03D7) {
+                    if (header->MessageType == MapEffect) {
                         //ce.LogInfo("tst");
                         onMapEffectEvent(header->ActorID, (FFXIVIpcMapEffect*)dataPtr);
                     }
@@ -113,19 +106,15 @@ namespace CactbotExtension.Events
         public unsafe void onMapEffectEvent(uint actorId, FFXIVIpcMapEffect* message)
         {
             ce.DispatchToJS(new MapEffectEvent(actorId, message->parm1, message->parm2, message->parm3, message->parm4));
-            string message2 = $"{actorId:X}:{message->parm1:X8}:{message->parm2:X8}:{message->parm3:X8}:{message->parm4:X8}:";
-            Log("103", message2);
-            //ce.LogInfo(message2);
+            string logline = $"{actorId:X}:{message->parm1:X8}:{message->parm2:X8}:{message->parm3:X8}:{message->parm4:X8}:";
+            Utils.Log("103", logline);
+            //ce.LogInfo(message2)
         }
 
-        private void Log(string type, string message)
+        public void Dispose()
         {
-            string text = DateTime.Now.ToString("HH:mm:ss");
-            string message2 = "[" + text + "] [" + type + "] " + message.Trim();
-            //PluginUI.Log(message2);
-            message2 = $"00|{DateTime.Now:O}|0|{type}:{message}|";
-            ActGlobals.oFormActMain.ParseRawLogLine(isImport: false, DateTime.Now, message2 ?? "");
+            this.ffxivPlugin.DataSubscription.NetworkReceived -= ffxivPluginNetworkReceivedDelegate;
+            ce.LogInfo("Net Data Subscription Removed.");
         }
-
     }
 }

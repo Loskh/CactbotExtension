@@ -35,6 +35,7 @@ namespace CactbotExtension
 
         public void DeInitPlugin()
         {
+
         }
 
         public void Init()

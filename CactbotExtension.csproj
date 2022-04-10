@@ -100,5 +100,6 @@
   <PropertyGroup>
     <LangVersion>9.0</LangVersion>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 </Project>

@@ -1,0 +1,11 @@
+{
+    "FFXIVClients": [
+        {
+            "GameVersion": "2022.03.29.0000.0000",
+            "Region": "cn",
+            "Opcode": {
+                "MapEffect": "0x03D7"
+            }
+        }
+    ]
+}

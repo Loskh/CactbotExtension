@@ -21,7 +21,7 @@ namespace CactbotExtension
         : base(container)
         {
             Name = "CactbotExtension";
-            LogInfo("Started");
+            //LogInfo("Started");
             //InitializeActions();
             InitializeEvents();
         }
@@ -52,6 +52,12 @@ namespace CactbotExtension
             ev["type"] = e.EventName();
             ev["detail"] = JObject.FromObject(e);
             DispatchEvent(ev);
+        }
+
+        public override void Dispose()
+        {
+            EventsModule.Dispose();
+            base.Dispose();
         }
 
         #endregion
@@ -172,19 +178,19 @@ namespace CactbotExtension
         }
         public void LogDebug( params object[] args)
         {
-            this.Log(LogLevel.Debug, "CactbotExtension:{0}", args);
+            this.Log(LogLevel.Debug, "[CactbotExtension] {0}", args);
         }
         public void LogError(params object[] args)
         {
-            this.Log(LogLevel.Error, "CactbotExtension:{0}", args);
+            this.Log(LogLevel.Error, "[CactbotExtension] {0}", args);
         }
         public void LogWarning(params object[] args)
         {
-            this.Log(LogLevel.Warning, "CactbotExtension:{0}", args);
+            this.Log(LogLevel.Warning, "[CactbotExtension] {0}", args);
         }
         public void LogInfo( params object[] args)
         {
-            this.Log(LogLevel.Info, "CactbotExtension:{0}", args);
+            this.Log(LogLevel.Info, "[CactbotExtension] {0}", args);
         }
         #endregion
     }
