@@ -39,6 +39,11 @@ namespace CactbotExtension
 
         public void DeInitPlugin()
         {
+            foreach (var item in Registry.EventSources) {
+                if (item.Name == "CactbotExtension" && item != null) {
+                    item.Dispose();
+                }
+            }
             Type type = typeof(Registry);
             FieldInfo fieldInfo = type.GetField("_eventSources", BindingFlags.Instance | BindingFlags.NonPublic);
             ((List<IEventSource>)fieldInfo.GetValue(Registry)).Remove(EventSource);

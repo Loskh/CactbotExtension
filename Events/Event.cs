@@ -36,17 +36,14 @@ namespace CactbotExtension.Events
                 }
                 if (this.ffxivPlugin != null) {
                     this.ffxivPlugin.DataSubscription.ProcessChanged += CactbotExtensionOnProcessChanged;
-                    //var task = new Task(() => {
-
-                    //});
-                    //task.Start();
+                    CactbotExtensionOnProcessChanged(this.ffxivPlugin.DataRepository.GetCurrentFFXIVProcess());
                 }
             }
         }
 
         private void CactbotExtensionOnProcessChanged(System.Diagnostics.Process process)
         {
-            var gameProcess = this.ffxivPlugin.DataRepository.GetCurrentFFXIVProcess();
+            var gameProcess = process;
             var gameVersion = Utils.GetGameVersion(gameProcess);
             var gameRegion = Utils.GetRegion(this.ffxivPlugin);
             if (OpcodeManager.Instance.GameVersion == gameVersion && OpcodeManager.Instance.Region == gameRegion)
@@ -117,6 +114,7 @@ namespace CactbotExtension.Events
         public void Dispose()
         {
             this.ffxivPlugin.DataSubscription.NetworkReceived -= ffxivPluginNetworkReceivedDelegate;
+            this.ffxivPlugin.DataSubscription.ProcessChanged -= CactbotExtensionOnProcessChanged;
             ce.LogInfo("Net Data Subscription Removed.");
         }
     }
