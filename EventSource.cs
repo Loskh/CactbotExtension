@@ -13,7 +13,7 @@ using CactbotExtension.Events;
 
 namespace CactbotExtension
 {
-    public class EventSource : EventSourceBase
+    public class EventSource : EventSourceBase,IDisposable
     {
         public delegate void HandlerDelegate(JToken payload);
 
@@ -26,7 +26,7 @@ namespace CactbotExtension
             InitializeEvents();
         }
         #region Events
-        private Events.Events EventsModule;
+        private static Events.Events EventsModule;
         private List<string> EventBind = new();
         public void InitializeEvents()
         {
@@ -57,6 +57,7 @@ namespace CactbotExtension
         public override void Dispose()
         {
             EventsModule.Dispose();
+            //EventsModule = null;
             base.Dispose();
         }
 

@@ -9,7 +9,7 @@ namespace CactbotExtension
 {
     internal class Utils
     {
-        public static void Log(string type, string message)
+        public static void AddLogLine(string type, string message)
         {
             var logline = $"00|{DateTime.Now:O}|0|{type}:{message}|";
             ActGlobals.oFormActMain.ParseRawLogLine(isImport: false, DateTime.Now, logline ?? "");
@@ -21,6 +21,27 @@ namespace CactbotExtension
             //string version = "2000.01.01.0000.0000";
             var version = File.ReadAllText(gamePath);
             return version;
+        }
+
+        public static string GetRegion(FFXIV_ACT_Plugin.FFXIV_ACT_Plugin ffxiv_plugin)
+        {
+            switch (GetLanguageId(ffxiv_plugin)) {
+                case 1:
+                    //return "en";
+                case 2:
+                    //return "fr";
+                case 3:
+                    //return "de";
+                case 4:
+                    //return "ja";
+                    return "intl";
+                case 5:
+                    return "cn";
+                case 6:
+                    return "ko";
+                default:
+                    return null;
+            }
         }
 
         //https://github.com/quisquous/cactbot/blob/f0b312bfb0cc263c82c0ea2eceb983de5b25de8b/plugin/CactbotEventSource/FFXIVPlugin.cs#L28

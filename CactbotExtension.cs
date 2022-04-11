@@ -8,12 +8,16 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using System.Globalization;
+using System.Reflection;
 
 namespace CactbotExtension
 {
     public class CactbotExtension : IActPluginV1, IOverlayAddonV2
     {
-        public static string pluginPath = "";
+        public string pluginPath = "";
+        private static EventSource EventSource;
+        private static TinyIoCContainer TinyIoCContainer;
+        private static Registry Registry;
 
         public void InitPlugin(TabPage pluginScreenSpace, Label pluginStatusText)
         {
@@ -35,16 +39,18 @@ namespace CactbotExtension
 
         public void DeInitPlugin()
         {
-
+            Type type = typeof(Registry);
+            FieldInfo fieldInfo = type.GetField("_eventSources", BindingFlags.Instance | BindingFlags.NonPublic);
+            ((List<IEventSource>)fieldInfo.GetValue(Registry)).Remove(EventSource);
         }
 
         public void Init()
         {
-            var container = Registry.GetContainer();
-            var registry = container.Resolve<Registry>();
-
+            TinyIoCContainer = Registry.GetContainer();
+            Registry = TinyIoCContainer.Resolve<Registry>();
+            EventSource = new EventSource(TinyIoCContainer);
             // Register EventSource
-            registry.StartEventSource(new EventSource(container));
+            Registry.StartEventSource(EventSource);
 
         }
     }

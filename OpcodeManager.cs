@@ -21,8 +21,8 @@ namespace CactbotExtension
 
         private readonly string LocalOpcodeFile = Path.Combine(ActGlobals.oFormActMain.AppDataFolder.FullName, "Config", "CactbotExtension.Opcode.json");
 
-        private string GameVersion = "2022.03.29.0000.0000";
-        private string Region = "cn";
+        public string GameVersion = "2000.00.00.0000.0000";
+        public string Region = "cn";
 
         private JObject Opcode = new();
 
