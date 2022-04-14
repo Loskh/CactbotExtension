@@ -41,6 +41,7 @@ Here is the sturct of the packet.
     ```
 * Analysis network package
   - Enter "Amaurot" and walking forward until a meteor smashed on the ground
+  ![Amaurot screenshot](Assets/ffxiv_20220414_165646_647.png)
   - Filter the packet
     - Length = 48 （ServerMessageHeader included）
     - param1 = 80030043, parm2 = 00080004, parm3 = 00000003 , parm4 = 00000000.The bytes is following.
