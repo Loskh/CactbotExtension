@@ -43,10 +43,13 @@ namespace CactbotExtension
                 if (item.Name == "CactbotExtension" && item != null) {
                     item.Dispose();
                 }
+                //EventSource.LogInfo(item.Name);
             }
+            //EventSource.LogInfo(Registry.EventSources.Count());
             Type type = typeof(Registry);
             FieldInfo fieldInfo = type.GetField("_eventSources", BindingFlags.Instance | BindingFlags.NonPublic);
             ((List<IEventSource>)fieldInfo.GetValue(Registry)).Remove(EventSource);
+            //EventSource.LogInfo(Registry.EventSources.Count());
         }
 
         public void Init()
@@ -56,6 +59,7 @@ namespace CactbotExtension
             EventSource = new EventSource(TinyIoCContainer);
             // Register EventSource
             Registry.StartEventSource(EventSource);
+            //EventSource.LogInfo(Registry.EventSources.Count());
 
         }
     }

@@ -32,18 +32,33 @@ namespace CactbotExtension.Events
                 }
 
                 if (this.ffxivPlugin == null) {
-                    this.ffxivPlugin= (FFXIV_ACT_Plugin.FFXIV_ACT_Plugin)(ActGlobals.oFormActMain.ActPlugins.FirstOrDefault(x => x.pluginObj?.GetType().ToString() == "FFXIV_ACT_Plugin.FFXIV_ACT_Plugin")?.pluginObj);
+                    var ffxivPluginData= ActGlobals.oFormActMain.ActPlugins.FirstOrDefault(x => x.pluginObj?.GetType().ToString() == "FFXIV_ACT_Plugin.FFXIV_ACT_Plugin");
+                    this.ffxivPlugin= (FFXIV_ACT_Plugin.FFXIV_ACT_Plugin)ffxivPluginData?.pluginObj;
+                    if (this.ffxivPlugin != null) {
+                        var waitingFFXIVPlugin = new Task(() => {
+                            var isFFXIVPluginStarted = false;
+                            while (!isFFXIVPluginStarted) {
+                                if (ffxivPluginData.lblPluginStatus.Text.ToUpper().Contains("Started".ToUpper())) {
+                                    this.ffxivPlugin.DataSubscription.ProcessChanged += CactbotExtensionOnProcessChanged;
+                                    CactbotExtensionOnProcessChanged(this.ffxivPlugin.DataRepository.GetCurrentFFXIVProcess());
+                                    isFFXIVPluginStarted = true;
+                                    return;
+                                }
+                                Thread.Sleep(3000);
+                            }
+                        });
+                        waitingFFXIVPlugin.Start();
+                    }
                 }
-                if (this.ffxivPlugin != null) {
-                    this.ffxivPlugin.DataSubscription.ProcessChanged += CactbotExtensionOnProcessChanged;
-                    CactbotExtensionOnProcessChanged(this.ffxivPlugin.DataRepository.GetCurrentFFXIVProcess());
-                }
+
             }
         }
 
         private void CactbotExtensionOnProcessChanged(System.Diagnostics.Process process)
         {
             var gameProcess = process;
+            if (gameProcess == null)
+                return;
             var gameVersion = Utils.GetGameVersion(gameProcess);
             var gameRegion = Utils.GetRegion(this.ffxivPlugin);
             if (OpcodeManager.Instance.GameVersion == gameVersion && OpcodeManager.Instance.Region == gameRegion)
